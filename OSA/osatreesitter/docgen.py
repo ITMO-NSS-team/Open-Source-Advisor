@@ -54,14 +54,14 @@ class DocGen(object):
             file structure and for each class or standalone function, generating its documentation.
     """
 
-    def __init__(self):
+    def __init__(self, config_name: str):
         """
         Instantiates the object of the class.
 
         This method is a constructor that initializes the object by setting the 'api_key' attribute to the value of the 'OPENAI_API_KEY' environment variable.
         """
         self.api_key = os.getenv("OPENAI_API_KEY")
-        self.model_handler: ModelHandler = ModelHandlerFactory.build()
+        self.model_handler: ModelHandler = ModelHandlerFactory.build(config_name)
 
     @staticmethod
     def format_structure_openai(structure: dict):
