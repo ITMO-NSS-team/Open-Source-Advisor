@@ -80,6 +80,12 @@ Here is a short demo:
 
 Install Open-Source-Advisor using one of the following methods:
 
+**Using PyPi:**
+
+```sh
+pip install osa-tools
+```
+
 **Build from source:**
 
 1. Clone the Open-Source-Advisor repository:
