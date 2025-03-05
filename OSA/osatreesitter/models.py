@@ -1,4 +1,3 @@
-from OSA.utils import osa_project_root
 from readmeai.config.settings import ConfigLoader
 from readmeai.config.settings import Settings
 from abc import ABC, abstractmethod
@@ -291,7 +290,7 @@ class ModelHandlerFactory:
     """
 
     @classmethod
-    def build(cls, config_name: str):
+    def build(cls):
         """
         Builds and returns a handler based on the configuration of the class.
 
@@ -304,7 +303,7 @@ class ModelHandlerFactory:
         Returns:
             None: This method does not return anything.
         """
-        config_loader: ConfigLoader = ConfigLoader(os.path.join(osa_project_root(), "OSA", "config", config_name))
+        config_loader: ConfigLoader = ConfigLoader("OSA/config")
         config = config_loader.config
         return cls.create_handler(config)
 
@@ -323,12 +322,7 @@ class ModelHandlerFactory:
         Returns:
             None: This method does not return anything.
         """
-        
-        if config.llm.api == "vsegpt":
-            model = config.llm.model.split("/")[0]
-        else:
-            model = config.llm.model
-            
+        model = config.llm.model
         constructors = {
             "llama": LlamaHandler,
             "openai": OpenaiHandler,
