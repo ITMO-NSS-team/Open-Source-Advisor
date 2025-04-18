@@ -16,6 +16,7 @@ from osa_tool.readmeai.readmegen_article.config.settings import ArticleConfigLoa
 from osa_tool.readmeai.readme_core import readme_agent
 from osa_tool.translation.dir_translator import DirectoryTranslator
 from osa_tool.convertion.notebook_converter import NotebookConverter
+from osa_tool.cicd.workflow import add_github_actions_workflow
 from osa_tool.utils import (
     delete_repository,
     osa_project_root,
@@ -64,7 +65,7 @@ def main():
 
         # .ipynb to .py convertion
         if notebook_paths is not None:
-            convert_notebooks(config, notebook_paths)
+            convert_notebooks(repo_url, notebook_paths)
         
         # Repository Analysis Report generation
         sourcerank = SourceRank(config)
@@ -81,6 +82,9 @@ def main():
 
         # Readme generation
         readme_agent(config, article)
+
+        # Autotune ci
+        add_github_actions_workflow(repo_url)
         
         github_agent.commit_and_push_changes()
         github_agent.create_pull_request()
@@ -93,11 +97,11 @@ def main():
         logger.error("Error: %s", e, exc_info=True)
 
 
-def convert_notebooks(config_loader: ConfigLoader, notebook_paths: List[str] | None = None) -> None:
+def convert_notebooks(repo_url: str, notebook_paths: List[str] | None = None) -> None:
     """Converts Jupyter notebooks to Python scripts based on provided paths.
 
     Args:
-        config_loader: The configuration object which contains repo_url.
+        repo_url: URL of the GitHub repository.
         notebook_paths: A list of paths to the notebooks to be converted (or None). If empty,
                         the converter will process the current repository.
 
@@ -105,7 +109,6 @@ def convert_notebooks(config_loader: ConfigLoader, notebook_paths: List[str] | N
     try:
         converter = NotebookConverter()
         if len(notebook_paths) == 0:
-            repo_url = config_loader.config.git.repository
             converter.process_path(os.path.basename(repo_url))
         else:
             for path in notebook_paths:
