@@ -1,6 +1,5 @@
 import logging
 import os
-
 from typing import List
 
 from rich.logging import RichHandler
@@ -8,19 +7,15 @@ from rich.logging import RichHandler
 from osa_tool.analytics.report_maker import ReportGenerator
 from osa_tool.analytics.sourcerank import SourceRank
 from osa_tool.arguments_parser import get_cli_args
+from osa_tool.convertion.notebook_converter import NotebookConverter
 from osa_tool.github_agent.github_agent import GithubAgent
 from osa_tool.osatreesitter.docgen import DocGen
 from osa_tool.osatreesitter.osa_treesitter import OSA_TreeSitter
 from osa_tool.readmeai.config.settings import ConfigLoader, GitSettings
-from osa_tool.readmeai.readmegen_article.config.settings import ArticleConfigLoader
 from osa_tool.readmeai.readme_core import readme_agent
+from osa_tool.readmeai.readmegen_article.config.settings import ArticleConfigLoader
 from osa_tool.translation.dir_translator import DirectoryTranslator
-from osa_tool.convertion.notebook_converter import NotebookConverter
-from osa_tool.utils import (
-    delete_repository,
-    osa_project_root,
-    parse_folder_name
-)
+from osa_tool.utils import delete_repository, osa_project_root, parse_folder_name
 
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
@@ -45,6 +40,7 @@ def main():
     # Create a command line argument parser
     args = get_cli_args()
     repo_url = args.repository
+    repo_branch_name = args.branch
     api = args.api
     base_url = args.base_url
     model_name = args.model
@@ -56,7 +52,7 @@ def main():
         config = load_configuration(repo_url, api, base_url, model_name, article)
 
         # Initialize GitHub agent and perform operations
-        github_agent = GithubAgent(repo_url)
+        github_agent = GithubAgent(repo_url, repo_branch_name)
         github_agent.star_repository()
         github_agent.create_fork()
         github_agent.clone_repository()

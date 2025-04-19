@@ -1,11 +1,14 @@
-from git import Repo, GitCommandError, InvalidGitRepositoryError
-import os
 import logging
-from rich.logging import RichHandler
+import os
+
 import requests
 from dotenv import load_dotenv
+from git import GitCommandError, InvalidGitRepositoryError, Repo
+from rich.logging import RichHandler
+
 from osa_tool.analytics.metadata import load_data_metadata
-from osa_tool.utils import parse_folder_name, get_base_repo_url
+from osa_tool.utils import get_base_repo_url, parse_folder_name
+
 for handler in logging.root.handlers[:]:
     logging.root.removeHandler(handler)
 
@@ -28,8 +31,9 @@ class GithubAgent:
     Attributes:
         AGENT_SIGNATURE: A signature string appended to pull request descriptions.
         repo_url: The URL of the GitHub repository.
+        base_branch: The name of the repository's branch.
         clone_dir: The directory where the repository will be cloned.
-        branch_name: The name of the branch to be created or checked out.
+        branch_name: The name of the branch to be created.
         repo: The GitPython Repo object representing the repository.
         token: The GitHub token for authentication.
     """
@@ -39,11 +43,12 @@ class GithubAgent:
         "\n_OSA just makes your open source project better!_"
     )
 
-    def __init__(self, repo_url: str, branch_name: str = "osa_tool"):
+    def __init__(self, repo_url: str, repo_branch_name: str = None, branch_name: str = "osa_tool"):
         """Initializes the GithubAgent with the repository URL and branch name.
 
         Args:
             repo_url: The URL of the GitHub repository.
+            repo_branch_name: The name of the repository's branch to be checked out.
             branch_name: The name of the branch to be created. Defaults to "osa_tool".
         """
         load_dotenv()
@@ -54,7 +59,7 @@ class GithubAgent:
         self.token = os.getenv("GIT_TOKEN")
         self.fork_url = None
         self.metadata = load_data_metadata(self.repo_url)
-        self.base_branch = self.metadata.default_branch
+        self.base_branch = repo_branch_name or self.metadata.default_branch
 
     def create_fork(self) -> None:
         """Creates a fork of the repository in the osa_tool account.
@@ -141,8 +146,12 @@ class GithubAgent:
                 raise
         else:
             try:
-                logger.info(f"Cloning repository {self.repo_url} into {self.clone_dir}...")
-                self.repo = Repo.clone_from(self._get_auth_url(), self.clone_dir)
+                logger.info(
+                    f"Cloning the {self.base_branch} branch from {self.repo_url} into directory {self.clone_dir}...")
+                self.repo = Repo.clone_from(
+                    url=self._get_auth_url(),
+                    to_path=self.clone_dir,
+                    branch=self.base_branch)
                 logger.info("Cloning completed")
             except GitCommandError as e:
                 logger.error(f"Cloning failed: {repr(e)}")
