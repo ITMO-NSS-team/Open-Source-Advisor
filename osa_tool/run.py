@@ -1,7 +1,9 @@
 import os
 from typing import List
+
 import tomli
 
+from osa_tool.aboutgen.about_generator import AboutGenerator
 from osa_tool.analytics.report_maker import ReportGenerator
 from osa_tool.analytics.sourcerank import SourceRank
 from osa_tool.arguments_parser import get_cli_args
@@ -13,11 +15,7 @@ from osa_tool.osatreesitter.docgen import DocGen
 from osa_tool.osatreesitter.osa_treesitter import OSA_TreeSitter
 from osa_tool.readmegen.readme_core import readme_agent
 from osa_tool.translation.dir_translator import DirectoryTranslator
-from osa_tool.utils import (
-    delete_repository,
-    logger,
-    parse_folder_name
-)
+from osa_tool.utils import delete_repository, logger, parse_folder_name
 
 
 def main():
@@ -113,13 +111,24 @@ def main():
         # Readme generation
         readme_agent(config, article)
 
+        # About section generation
+        about_gen = AboutGenerator(config)
+        about_data = about_gen.generate_about_section()
+        pr_body = (
+            "You can add the following information to the `About` section of your GitHub repository:\n"
+            f"- Description: {about_data['description']}\n"
+            f"- Homepage: {about_data['homepage']}\n"
+            f"- Topics: {', '.join(about_data['topics'])}\n"
+            "Please review and add them to your repository.\n"
+        )
+
         # Generate GitHub workflows
         if generate_workflows:
             generate_github_workflows(config)
 
         if publish_results:
             github_agent.commit_and_push_changes()
-            github_agent.create_pull_request()
+            github_agent.create_pull_request(body=pr_body)
 
         if args.delete_dir:
             delete_repository(repo_url)
